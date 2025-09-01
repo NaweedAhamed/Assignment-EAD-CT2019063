@@ -31,12 +31,12 @@ INSTALLED_APPS = [
     'corsheaders',
 
     # Local apps
-    'core',  # remove this line if you haven't created the 'core' app yet
+    'core',  
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'corsheaders.middleware.CorsMiddleware',  # CORS should be high in the stack
+    'corsheaders.middleware.CorsMiddleware',  
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
