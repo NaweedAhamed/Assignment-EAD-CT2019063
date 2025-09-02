@@ -1,6 +1,5 @@
 from django.contrib import admin
-from core.models import Course
-from core.models import Course, Student
+from core.models import Course, Student, Enrollment
 
 
 @admin.register(Course)
@@ -10,8 +9,22 @@ class CourseAdmin(admin.ModelAdmin):
     list_filter = ("credits",)
     ordering = ("code",)
 
+
 @admin.register(Student)
 class StudentAdmin(admin.ModelAdmin):
     list_display = ("index_no", "full_name", "email", "program", "created_at")
     search_fields = ("index_no", "full_name", "email", "program")
     ordering = ("index_no",)
+
+
+@admin.register(Enrollment)
+class EnrollmentAdmin(admin.ModelAdmin):
+    list_display = ("student", "course", "status", "enrolled_at")
+    search_fields = (
+        "student__index_no",
+        "student__full_name",
+        "course__code",
+        "course__title",
+    )
+    list_filter = ("status", "course__code")
+    ordering = ("-enrolled_at",)
