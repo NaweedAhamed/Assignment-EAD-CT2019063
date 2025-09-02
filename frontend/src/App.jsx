@@ -12,6 +12,11 @@ import StudentsList from "./pages/StudentsList";
 import StudentDetail from "./pages/StudentDetail";
 import StudentForm from "./pages/StudentForm";
 
+// Enrollments
+import EnrollmentsList from "./pages/EnrollmentsList";
+import EnrollmentForm from "./pages/EnrollmentForm";
+import StudentEnrollments from "./pages/StudentEnrollments";
+
 function App() {
   return (
     <Router>
@@ -35,6 +40,17 @@ function App() {
               <Route path="/students/:id" element={<StudentDetail />} />
               <Route path="/admin/students/new" element={<StudentForm />} />
               <Route path="/admin/students/:id/edit" element={<StudentForm />} />
+
+              {/* Enrollments */}
+              <Route path="/enrollments" element={<EnrollmentsList />} />
+              <Route path="/enrollments/new" element={<EnrollmentForm />} />
+              <Route path="/enrollments/:id/edit" element={<EnrollmentForm />} />
+
+              {/* Per-Student Enrollments (optional) */}
+              <Route
+                path="/students/:studentId/enrollments"
+                element={<StudentEnrollments />}
+              />
             </Routes>
           </div>
         </main>
