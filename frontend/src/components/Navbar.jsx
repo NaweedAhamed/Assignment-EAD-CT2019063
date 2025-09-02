@@ -6,8 +6,7 @@ export default function Navbar() {
 
   const base =
     "px-3 py-2 rounded hover:bg-white/10 transition text-sm font-medium";
-  const active =
-    "bg-white/20 text-white";
+  const active = "bg-white/20 text-white";
 
   return (
     <nav className="bg-blue-600 text-white">
@@ -36,6 +35,24 @@ export default function Navbar() {
             >
               + Add Course
             </NavLink>
+
+            {/* Students */}
+            <NavLink
+              to="/students"
+              className={({ isActive }) =>
+                `${base} ${isActive ? active : "text-white/90"}`
+              }
+            >
+              Students
+            </NavLink>
+            <NavLink
+              to="/admin/students/new"
+              className={({ isActive }) =>
+                `${base} ${isActive ? active : "text-white/90"}`
+              }
+            >
+              + Add Student
+            </NavLink>
           </div>
 
           {/* Mobile toggle */}
@@ -44,11 +61,17 @@ export default function Navbar() {
             onClick={() => setOpen((v) => !v)}
             aria-label="Toggle menu"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5"
-                 viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd"
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fillRule="evenodd"
                 d="M3 5h14a1 1 0 100-2H3a1 1 0 100 2zm14 4H3a1 1 0 100 2h14a1 1 0 100-2zm0 6H3a1 1 0 100 2h14a1 1 0 100-2z"
-                clipRule="evenodd" />
+                clipRule="evenodd"
+              />
             </svg>
           </button>
         </div>
@@ -74,6 +97,25 @@ export default function Navbar() {
                 }
               >
                 + Add Course
+              </NavLink>
+
+              <NavLink
+                to="/students"
+                onClick={() => setOpen(false)}
+                className={({ isActive }) =>
+                  `block ${base} ${isActive ? active : "text-white/90"}`
+                }
+              >
+                Students
+              </NavLink>
+              <NavLink
+                to="/admin/students/new"
+                onClick={() => setOpen(false)}
+                className={({ isActive }) =>
+                  `block ${base} ${isActive ? active : "text-white/90"}`
+                }
+              >
+                + Add Student
               </NavLink>
             </div>
           </div>
