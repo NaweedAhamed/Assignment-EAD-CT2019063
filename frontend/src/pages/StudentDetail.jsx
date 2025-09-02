@@ -11,7 +11,7 @@ export default function StudentDetail() {
   useEffect(() => {
     getStudent(id)
       .then(setStudent)
-      .catch((err) => setError(err.message));
+      .catch((err) => setError(err.message || "Failed to load student"));
   }, [id]);
 
   if (error) return <p className="p-4 text-red-600">{error}</p>;
@@ -24,12 +24,28 @@ export default function StudentDetail() {
       <p className="text-gray-700 mb-1">Email: {student.email}</p>
       <p className="text-gray-700">Program: {student.program || "—"}</p>
 
-      <div className="mt-6 space-x-4">
-        <Link to="/students" className="bg-gray-200 text-gray-700 px-4 py-2 rounded">
+      <div className="mt-6 flex flex-wrap gap-3">
+        <Link
+          to="/students"
+          className="bg-gray-200 text-gray-700 px-4 py-2 rounded hover:bg-gray-300"
+        >
           Back
         </Link>
-        <Link to={`/admin/students/${student.id}/edit`} className="bg-blue-600 text-white px-4 py-2 rounded">
+
+        <Link
+          to={`/admin/students/${student.id}/edit`}
+          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+        >
           Edit
+        </Link>
+
+        {/* NEW: View Enrollments */}
+        <Link
+          to={`/students/${student.id}/enrollments`}
+          className="bg-black text-white px-4 py-2 rounded shadow hover:opacity-90"
+          aria-label="View this student's enrollments"
+        >
+          View Enrollments
         </Link>
       </div>
     </div>

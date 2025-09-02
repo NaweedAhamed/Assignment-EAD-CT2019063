@@ -41,6 +41,7 @@ export default function StudentsList() {
   if (loading) return <Loader />;
   if (error) return <p className="p-4 text-red-600">{error}</p>;
 
+  // No students at all
   if (students.length === 0) {
     return (
       <div className="p-6">
@@ -52,6 +53,40 @@ export default function StudentsList() {
             <Link to="/admin/students/new" className="bg-blue-600 text-white px-4 py-2 rounded">
               + Add Student
             </Link>
+          }
+        />
+      </div>
+    );
+  }
+
+  // No matches for current search/filter
+  if (filtered.length === 0) {
+    return (
+      <div className="p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h1 className="text-2xl font-bold">Students</h1>
+          <Link to="/admin/students/new" className="bg-blue-600 text-white px-4 py-2 rounded">
+            + Add Student
+          </Link>
+        </div>
+        <div className="mb-4">
+          <input
+            className="border w-full md:w-80 rounded px-3 py-2"
+            placeholder="Search by name, index, email…"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+          />
+        </div>
+        <EmptyState
+          title="No matching students"
+          subtitle="Try a different keyword or clear your search."
+          action={
+            <button
+              onClick={() => setQ("")}
+              className="bg-gray-200 text-gray-800 px-4 py-2 rounded"
+            >
+              Clear search
+            </button>
           }
         />
       </div>
@@ -88,6 +123,10 @@ export default function StudentsList() {
           <div className="space-x-3">
             <Link to={`/students/${row.id}`} className="text-blue-600 hover:underline">
               View
+            </Link>
+            {/* NEW: quick link to this student's enrollments */}
+            <Link to={`/students/${row.id}/enrollments`} className="text-indigo-600 hover:underline">
+              Enrollments
             </Link>
             <Link to={`/admin/students/${row.id}/edit`} className="text-green-600 hover:underline">
               Edit

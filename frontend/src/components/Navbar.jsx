@@ -19,6 +19,7 @@ export default function Navbar() {
 
           {/* Desktop menu */}
           <div className="hidden md:flex items-center gap-2">
+            {/* Courses */}
             <NavLink
               to="/courses"
               className={({ isActive }) =>
@@ -53,6 +54,24 @@ export default function Navbar() {
             >
               + Add Student
             </NavLink>
+
+            {/* Enrollments */}
+            <NavLink
+              to="/enrollments"
+              className={({ isActive }) =>
+                `${base} ${isActive ? active : "text-white/90"}`
+              }
+            >
+              Enrollments
+            </NavLink>
+            <NavLink
+              to="/enrollments/new"
+              className={({ isActive }) =>
+                `${base} ${isActive ? active : "text-white/90"}`
+              }
+            >
+              + Add Enrollment
+            </NavLink>
           </div>
 
           {/* Mobile toggle */}
@@ -60,6 +79,7 @@ export default function Navbar() {
             className="md:hidden inline-flex items-center justify-center rounded p-2 hover:bg-white/10"
             onClick={() => setOpen((v) => !v)}
             aria-label="Toggle menu"
+            aria-expanded={open}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -80,6 +100,7 @@ export default function Navbar() {
         {open && (
           <div className="md:hidden pb-3">
             <div className="flex flex-col gap-1">
+              {/* Courses */}
               <NavLink
                 to="/courses"
                 onClick={() => setOpen(false)}
@@ -99,6 +120,7 @@ export default function Navbar() {
                 + Add Course
               </NavLink>
 
+              {/* Students */}
               <NavLink
                 to="/students"
                 onClick={() => setOpen(false)}
@@ -116,6 +138,26 @@ export default function Navbar() {
                 }
               >
                 + Add Student
+              </NavLink>
+
+              {/* Enrollments */}
+              <NavLink
+                to="/enrollments"
+                onClick={() => setOpen(false)}
+                className={({ isActive }) =>
+                  `block ${base} ${isActive ? active : "text-white/90"}`
+                }
+              >
+                Enrollments
+              </NavLink>
+              <NavLink
+                to="/enrollments/new"
+                onClick={() => setOpen(false)}
+                className={({ isActive }) =>
+                  `block ${base} ${isActive ? active : "text-white/90"}`
+                }
+              >
+                + Add Enrollment
               </NavLink>
             </div>
           </div>
