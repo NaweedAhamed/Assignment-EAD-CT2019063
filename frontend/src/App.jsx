@@ -2,6 +2,12 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 
+// Auth
+import { AuthProvider } from "./context/AuthContext";
+import ProtectedRoute from "./components/ProtectedRoute";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+
 // Courses
 import CoursesList from "./pages/CoursesList";
 import CourseDetail from "./pages/CourseDetail";
@@ -31,63 +37,168 @@ import StudentAttendance from "./pages/StudentAttendance"; // optional per-stude
 function App() {
   return (
     <Router>
-      <div className="min-h-screen flex flex-col bg-gray-50">
-        <Navbar />
+      {/* AuthProvider must be inside Router because it uses useNavigate */}
+      <AuthProvider>
+        <div className="min-h-screen flex flex-col bg-gray-50">
+          <Navbar />
 
-        <main className="flex-1">
-          <div className="mx-auto max-w-6xl px-4 py-6">
-            <Routes>
-              {/* Home */}
-              <Route path="/" element={<CoursesList />} />
+          <main className="flex-1">
+            <div className="mx-auto max-w-6xl px-4 py-6">
+              <Routes>
+                {/* Home */}
+                <Route path="/" element={<CoursesList />} />
 
-              {/* Courses */}
-              <Route path="/courses" element={<CoursesList />} />
-              <Route path="/courses/:id" element={<CourseDetail />} />
-              <Route path="/admin/courses/new" element={<CourseForm />} />
-              <Route path="/admin/courses/:id/edit" element={<CourseForm />} />
+                {/* Auth */}
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
 
-              {/* Students */}
-              <Route path="/students" element={<StudentsList />} />
-              <Route path="/students/:id" element={<StudentDetail />} />
-              <Route path="/admin/students/new" element={<StudentForm />} />
-              <Route path="/admin/students/:id/edit" element={<StudentForm />} />
+                {/* Courses */}
+                <Route path="/courses" element={<CoursesList />} />
+                <Route path="/courses/:id" element={<CourseDetail />} />
+                <Route
+                  path="/admin/courses/new"
+                  element={
+                    <ProtectedRoute roles={['admin']}>
+                      <CourseForm />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/courses/:id/edit"
+                  element={
+                    <ProtectedRoute roles={['admin']}>
+                      <CourseForm />
+                    </ProtectedRoute>
+                  }
+                />
 
-              {/* Enrollments */}
-              <Route path="/enrollments" element={<EnrollmentsList />} />
-              <Route path="/enrollments/new" element={<EnrollmentForm />} />
-              <Route path="/enrollments/:id/edit" element={<EnrollmentForm />} />
+                {/* Students */}
+                <Route path="/students" element={<StudentsList />} />
+                <Route path="/students/:id" element={<StudentDetail />} />
+                <Route
+                  path="/admin/students/new"
+                  element={
+                    <ProtectedRoute roles={['admin']}>
+                      <StudentForm />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/students/:id/edit"
+                  element={
+                    <ProtectedRoute roles={['admin']}>
+                      <StudentForm />
+                    </ProtectedRoute>
+                  }
+                />
 
-              {/* Per-Student Enrollments */}
-              <Route
-                path="/students/:studentId/enrollments"
-                element={<StudentEnrollments />}
-              />
+                {/* Enrollments */}
+                <Route path="/enrollments" element={<EnrollmentsList />} />
+                <Route
+                  path="/enrollments/new"
+                  element={
+                    <ProtectedRoute roles={['admin', 'teacher']}>
+                      <EnrollmentForm />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/enrollments/:id/edit"
+                  element={
+                    <ProtectedRoute roles={['admin', 'teacher']}>
+                      <EnrollmentForm />
+                    </ProtectedRoute>
+                  }
+                />
 
-              {/* Assessments */}
-              <Route path="/assessments" element={<AssessmentsList />} />
-              <Route path="/assessments/new" element={<AssessmentForm />} />
-              <Route path="/assessments/:id/edit" element={<AssessmentForm />} />
+                {/* Per-Student Enrollments */}
+                <Route
+                  path="/students/:studentId/enrollments"
+                  element={<StudentEnrollments />}
+                />
 
-              {/* Gradebook */}
-              <Route path="/gradebook" element={<Gradebook />} />
+                {/* Assessments */}
+                <Route path="/assessments" element={<AssessmentsList />} />
+                <Route
+                  path="/assessments/new"
+                  element={
+                    <ProtectedRoute roles={['admin', 'teacher']}>
+                      <AssessmentForm />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/assessments/:id/edit"
+                  element={
+                    <ProtectedRoute roles={['admin', 'teacher']}>
+                      <AssessmentForm />
+                    </ProtectedRoute>
+                  }
+                />
 
-              {/* Sessions */}
-              <Route path="/sessions" element={<SessionsList />} />
-              <Route path="/sessions/new" element={<SessionForm />} />
-              <Route path="/sessions/:id/edit" element={<SessionForm />} />
+                {/* Gradebook */}
+                <Route
+                  path="/gradebook"
+                  element={
+                    <ProtectedRoute roles={['admin', 'teacher']}>
+                      <Gradebook />
+                    </ProtectedRoute>
+                  }
+                />
 
-              {/* Attendance */}
-              <Route path="/sessions/:id/attendance" element={<AttendanceBoard />} />
-              <Route path="/students/:studentId/attendance" element={<StudentAttendance />} />
+                {/* Sessions */}
+                <Route
+                  path="/sessions"
+                  element={
+                    <ProtectedRoute roles={['admin', 'teacher']}>
+                      <SessionsList />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/sessions/new"
+                  element={
+                    <ProtectedRoute roles={['admin', 'teacher']}>
+                      <SessionForm />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/sessions/:id/edit"
+                  element={
+                    <ProtectedRoute roles={['admin', 'teacher']}>
+                      <SessionForm />
+                    </ProtectedRoute>
+                  }
+                />
 
-              {/* 404 Fallback */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </div>
-        </main>
+                {/* Attendance */}
+                <Route
+                  path="/sessions/:id/attendance"
+                  element={
+                    <ProtectedRoute roles={['admin', 'teacher']}>
+                      <AttendanceBoard />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/students/:studentId/attendance"
+                  element={
+                    <ProtectedRoute>
+                      <StudentAttendance />
+                    </ProtectedRoute>
+                  }
+                />
 
-        <Footer />
-      </div>
+                {/* 404 Fallback */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </div>
+          </main>
+
+          <Footer />
+        </div>
+      </AuthProvider>
     </Router>
   );
 }

@@ -1,12 +1,25 @@
 import { useState } from "react";
 import { Link, NavLink } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
+  const { user, accessToken, logout } = useAuth();
 
   const base =
     "px-3 py-2 rounded hover:bg-white/10 transition text-sm font-medium";
   const active = "bg-white/20 text-white";
+
+  const isAuthed = !!accessToken;
+  const role = user?.role;
+  const isAdmin = role === "admin";
+  const isTeacher = role === "teacher";
+  const canManage = isAdmin || isTeacher;
+
+  const handleLogout = () => {
+    logout();
+    setOpen(false);
+  };
 
   return (
     <nav className="bg-blue-600 text-white">
@@ -28,16 +41,20 @@ export default function Navbar() {
             >
               Courses
             </NavLink>
-            <NavLink
-              to="/admin/courses/new"
-              className={({ isActive }) =>
-                `${base} ${isActive ? active : "text-white/90"}`
-              }
-            >
-              + Add Course
-            </NavLink>
 
-            {/* Students */}
+            {/* Admin-only */}
+            {isAdmin && (
+              <NavLink
+                to="/admin/courses/new"
+                className={({ isActive }) =>
+                  `${base} ${isActive ? active : "text-white/90"}`
+                }
+              >
+                + Add Course
+              </NavLink>
+            )}
+
+            {/* Students (list visible to all); Add Student = admin */}
             <NavLink
               to="/students"
               className={({ isActive }) =>
@@ -46,76 +63,127 @@ export default function Navbar() {
             >
               Students
             </NavLink>
-            <NavLink
-              to="/admin/students/new"
-              className={({ isActive }) =>
-                `${base} ${isActive ? active : "text-white/90"}`
-              }
-            >
-              + Add Student
-            </NavLink>
+            {isAdmin && (
+              <NavLink
+                to="/admin/students/new"
+                className={({ isActive }) =>
+                  `${base} ${isActive ? active : "text-white/90"}`
+                }
+              >
+                + Add Student
+              </NavLink>
+            )}
 
             {/* Enrollments */}
-            <NavLink
-              to="/enrollments"
-              className={({ isActive }) =>
-                `${base} ${isActive ? active : "text-white/90"}`
-              }
-            >
-              Enrollments
-            </NavLink>
-            <NavLink
-              to="/enrollments/new"
-              className={({ isActive }) =>
-                `${base} ${isActive ? active : "text-white/90"}`
-              }
-            >
-              + Add Enrollment
-            </NavLink>
+            {canManage && (
+              <>
+                <NavLink
+                  to="/enrollments"
+                  className={({ isActive }) =>
+                    `${base} ${isActive ? active : "text-white/90"}`
+                  }
+                >
+                  Enrollments
+                </NavLink>
+                <NavLink
+                  to="/enrollments/new"
+                  className={({ isActive }) =>
+                    `${base} ${isActive ? active : "text-white/90"}`
+                  }
+                >
+                  + Add Enrollment
+                </NavLink>
+              </>
+            )}
 
             {/* Assessments & Gradebook */}
-            <NavLink
-              to="/assessments"
-              className={({ isActive }) =>
-                `${base} ${isActive ? active : "text-white/90"}`
-              }
-            >
-              Assessments
-            </NavLink>
-            <NavLink
-              to="/assessments/new"
-              className={({ isActive }) =>
-                `${base} ${isActive ? active : "text-white/90"}`
-              }
-            >
-              + Add Assessment
-            </NavLink>
-            <NavLink
-              to="/gradebook"
-              className={({ isActive }) =>
-                `${base} ${isActive ? active : "text-white/90"}`
-              }
-            >
-              Gradebook
-            </NavLink>
+            {canManage && (
+              <>
+                <NavLink
+                  to="/assessments"
+                  className={({ isActive }) =>
+                    `${base} ${isActive ? active : "text-white/90"}`
+                  }
+                >
+                  Assessments
+                </NavLink>
+                <NavLink
+                  to="/assessments/new"
+                  className={({ isActive }) =>
+                    `${base} ${isActive ? active : "text-white/90"}`
+                  }
+                >
+                  + Add Assessment
+                </NavLink>
+                <NavLink
+                  to="/gradebook"
+                  className={({ isActive }) =>
+                    `${base} ${isActive ? active : "text-white/90"}`
+                  }
+                >
+                  Gradebook
+                </NavLink>
+              </>
+            )}
 
             {/* Sessions */}
-            <NavLink
-              to="/sessions"
-              className={({ isActive }) =>
-                `${base} ${isActive ? active : "text-white/90"}`
-              }
-            >
-              Sessions
-            </NavLink>
-            <NavLink
-              to="/sessions/new"
-              className={({ isActive }) =>
-                `${base} ${isActive ? active : "text-white/90"}`
-              }
-            >
-              + Add Session
-            </NavLink>
+            {canManage && (
+              <>
+                <NavLink
+                  to="/sessions"
+                  className={({ isActive }) =>
+                    `${base} ${isActive ? active : "text-white/90"}`
+                  }
+                >
+                  Sessions
+                </NavLink>
+                <NavLink
+                  to="/sessions/new"
+                  className={({ isActive }) =>
+                    `${base} ${isActive ? active : "text-white/90"}`
+                  }
+                >
+                  + Add Session
+                </NavLink>
+              </>
+            )}
+
+            {/* Auth actions */}
+            {!isAuthed ? (
+              <>
+                <NavLink
+                  to="/login"
+                  className={({ isActive }) =>
+                    `${base} ${isActive ? active : "text-white/90"}`
+                  }
+                >
+                  Login
+                </NavLink>
+                <NavLink
+                  to="/register"
+                  className={({ isActive }) =>
+                    `${base} ${isActive ? active : "text-white/90"}`
+                  }
+                >
+                  Register
+                </NavLink>
+              </>
+            ) : (
+              <div className="flex items-center gap-2 pl-2">
+                <span className="text-white/90 text-sm">
+                  {user?.first_name
+                    ? `Hi, ${user.first_name}`
+                    : `Hi, ${user?.username || "user"}`}
+                  {role ? ` · ${role}` : ""}
+                </span>
+                <button
+                  onClick={handleLogout}
+                  className="px-3 py-2 rounded bg-white/20 hover:bg-white/30 text-sm font-medium"
+                >
+                  Logout
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Mobile toggle */}
@@ -154,15 +222,17 @@ export default function Navbar() {
               >
                 Courses
               </NavLink>
-              <NavLink
-                to="/admin/courses/new"
-                onClick={() => setOpen(false)}
-                className={({ isActive }) =>
-                  `block ${base} ${isActive ? active : "text-white/90"}`
-                }
-              >
-                + Add Course
-              </NavLink>
+              {isAdmin && (
+                <NavLink
+                  to="/admin/courses/new"
+                  onClick={() => setOpen(false)}
+                  className={({ isActive }) =>
+                    `block ${base} ${isActive ? active : "text-white/90"}`
+                  }
+                >
+                  + Add Course
+                </NavLink>
+              )}
 
               {/* Students */}
               <NavLink
@@ -174,84 +244,129 @@ export default function Navbar() {
               >
                 Students
               </NavLink>
-              <NavLink
-                to="/admin/students/new"
-                onClick={() => setOpen(false)}
-                className={({ isActive }) =>
-                  `block ${base} ${isActive ? active : "text-white/90"}`
-                }
-              >
-                + Add Student
-              </NavLink>
+              {isAdmin && (
+                <NavLink
+                  to="/admin/students/new"
+                  onClick={() => setOpen(false)}
+                  className={({ isActive }) =>
+                    `block ${base} ${isActive ? active : "text-white/90"}`
+                  }
+                >
+                  + Add Student
+                </NavLink>
+              )}
 
               {/* Enrollments */}
-              <NavLink
-                to="/enrollments"
-                onClick={() => setOpen(false)}
-                className={({ isActive }) =>
-                  `block ${base} ${isActive ? active : "text-white/90"}`
-                }
-              >
-                Enrollments
-              </NavLink>
-              <NavLink
-                to="/enrollments/new"
-                onClick={() => setOpen(false)}
-                className={({ isActive }) =>
-                  `block ${base} ${isActive ? active : "text-white/90"}`
-                }
-              >
-                + Add Enrollment
-              </NavLink>
+              {canManage && (
+                <>
+                  <NavLink
+                    to="/enrollments"
+                    onClick={() => setOpen(false)}
+                    className={({ isActive }) =>
+                      `block ${base} ${isActive ? active : "text-white/90"}`
+                    }
+                  >
+                    Enrollments
+                  </NavLink>
+                  <NavLink
+                    to="/enrollments/new"
+                    onClick={() => setOpen(false)}
+                    className={({ isActive }) =>
+                      `block ${base} ${isActive ? active : "text-white/90"}`
+                    }
+                  >
+                    + Add Enrollment
+                  </NavLink>
+                </>
+              )}
 
               {/* Assessments & Gradebook */}
-              <NavLink
-                to="/assessments"
-                onClick={() => setOpen(false)}
-                className={({ isActive }) =>
-                  `block ${base} ${isActive ? active : "text-white/90"}`
-                }
-              >
-                Assessments
-              </NavLink>
-              <NavLink
-                to="/assessments/new"
-                onClick={() => setOpen(false)}
-                className={({ isActive }) =>
-                  `block ${base} ${isActive ? active : "text-white/90"}`
-                }
-              >
-                + Add Assessment
-              </NavLink>
-              <NavLink
-                to="/gradebook"
-                onClick={() => setOpen(false)}
-                className={({ isActive }) =>
-                  `block ${base} ${isActive ? active : "text-white/90"}`
-                }
-              >
-                Gradebook
-              </NavLink>
+              {canManage && (
+                <>
+                  <NavLink
+                    to="/assessments"
+                    onClick={() => setOpen(false)}
+                    className={({ isActive }) =>
+                      `block ${base} ${isActive ? active : "text-white/90"}`
+                    }
+                  >
+                    Assessments
+                  </NavLink>
+                  <NavLink
+                    to="/assessments/new"
+                    onClick={() => setOpen(false)}
+                    className={({ isActive }) =>
+                      `block ${base} ${isActive ? active : "text-white/90"}`
+                    }
+                  >
+                    + Add Assessment
+                  </NavLink>
+                  <NavLink
+                    to="/gradebook"
+                    onClick={() => setOpen(false)}
+                    className={({ isActive }) =>
+                      `block ${base} ${isActive ? active : "text-white/90"}`
+                    }
+                  >
+                    Gradebook
+                  </NavLink>
+                </>
+              )}
 
               {/* Sessions */}
-              <NavLink
-                to="/sessions"
-                onClick={() => setOpen(false)}
-                className={({ isActive }) =>
-                  `block ${base} ${isActive ? active : "text-white/90"}`
-                }
-              >
-                Sessions
-              </NavLink>
-              <NavLink
-                to="/sessions/new"
-                onClick={() => setOpen(false)}
-                className={({ isActive }) =>
-                  `block ${base} ${isActive ? active : "text-white/90"}`
-                }
-              >
-                + Add Session
-              </NavLink>
+              {canManage && (
+                <>
+                  <NavLink
+                    to="/sessions"
+                    onClick={() => setOpen(false)}
+                    className={({ isActive }) =>
+                      `block ${base} ${isActive ? active : "text-white/90"}`
+                    }
+                  >
+                    Sessions
+                  </NavLink>
+                  <NavLink
+                    to="/sessions/new"
+                    onClick={() => setOpen(false)}
+                    className={({ isActive }) =>
+                      `block ${base} ${isActive ? active : "text-white/90"}`
+                    }
+                  >
+                    + Add Session
+                  </NavLink>
+                </>
+              )}
+
+              {/* Auth */}
+              {!isAuthed ? (
+                <>
+                  <NavLink
+                    to="/login"
+                    onClick={() => setOpen(false)}
+                    className={({ isActive }) =>
+                      `block ${base} ${isActive ? active : "text-white/90"}`
+                    }
+                  >
+                    Login
+                  </NavLink>
+                  <NavLink
+                    to="/register"
+                    onClick={() => setOpen(false)}
+                    className={({ isActive }) =>
+                      `block ${base} ${isActive ? active : "text-white/90"}`
+                    }
+                  >
+                    Register
+                  </NavLink>
+                </>
+              ) : (
+                <button
+                  onClick={handleLogout}
+                  className={`block ${base} bg-white/20 text-left`}
+                >
+                  Logout
+                </button>
+              )}
             </div>
           </div>
         )}
