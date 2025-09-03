@@ -1,11 +1,13 @@
 from django.db import IntegrityError
+from django.db.models import Q
 from django.shortcuts import get_object_or_404
-from rest_framework import viewsets, filters, status, permissions, response
+from rest_framework import viewsets, filters, status, permissions, response, generics, pagination
 from rest_framework.exceptions import PermissionDenied
 
 from core.models import Enrollment, Student, Course
 from core.serializers import EnrollmentSerializer
-from core.permissions import has_role
+from core.serializers.enrollment_serializers import MyCourseSerializer, RosterEntrySerializer
+from core.permissions import has_role, IsAuthenticatedStudent, IsInstructorOfCourse
 
 
 def _student_for_user(user):
@@ -134,3 +136,55 @@ class EnrollmentViewSet(viewsets.ModelViewSet):
 
         self.perform_destroy(instance)
         return response.Response(status=status.HTTP_204_NO_CONTENT)
+
+
+# ---------------------------
+# Part 6: Additional Endpoints
+# ---------------------------
+
+class StandardPagination(pagination.PageNumberPagination):
+    page_size = 10
+    page_size_query_param = "page_size"
+    max_page_size = 100
+
+
+class MyCoursesView(generics.ListAPIView):
+    """
+    Returns enrollments for the authenticated student.
+    Usage: GET /core/my-courses/?page=1&page_size=12
+    """
+    serializer_class = MyCourseSerializer
+    permission_classes = [IsAuthenticatedStudent]
+    pagination_class = StandardPagination
+
+    def get_queryset(self):
+        student = _student_for_user(self.request.user)
+        if not student:
+            # empty queryset if no linked Student profile
+            return Enrollment.objects.none()
+        return Enrollment.objects.select_related("course").filter(student=student)
+
+
+class CourseRosterView(generics.ListAPIView):
+    """
+    Roster (enrollments) for a given course (instructor/admin only).
+    Supports search by student name/email/index via ?search=
+    Usage: GET /core/courses/<course_id>/roster/?search=ali&page=1
+    """
+    serializer_class = RosterEntrySerializer
+    permission_classes = [permissions.IsAuthenticated, IsInstructorOfCourse]
+    pagination_class = StandardPagination
+
+    def get_queryset(self):
+        course_id = self.kwargs["course_id"]
+        search = self.request.query_params.get("search", "").strip()
+
+        qs = Enrollment.objects.select_related("student").filter(course_id=course_id)
+
+        if search:
+            qs = qs.filter(
+                Q(student__full_name__icontains=search)
+                | Q(student__email__icontains=search)
+                | Q(student__index_no__icontains=search)
+            )
+        return qs

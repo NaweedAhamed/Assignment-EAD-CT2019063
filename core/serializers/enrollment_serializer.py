@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from core.models import Enrollment
+from core.serializers.course_serializers import CourseBriefSerializer
 
 
 class EnrollmentSerializer(serializers.ModelSerializer):
@@ -31,3 +32,21 @@ class EnrollmentSerializer(serializers.ModelSerializer):
                     {"non_field_errors": ["This student is already enrolled in that course."]}
                 )
         return data
+
+
+class MyCourseSerializer(serializers.ModelSerializer):
+    course = CourseBriefSerializer()
+
+    class Meta:
+        model = Enrollment
+        fields = ["id", "course", "status"]
+
+
+class RosterEntrySerializer(serializers.ModelSerializer):
+    student_name = serializers.CharField(source="student.full_name", read_only=True)
+    student_email = serializers.EmailField(source="student.email", read_only=True)
+    index_no = serializers.CharField(source="student.index_no", read_only=True)
+
+    class Meta:
+        model = Enrollment
+        fields = ["id", "student_name", "student_email", "index_no", "status"]

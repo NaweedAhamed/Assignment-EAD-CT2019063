@@ -1,4 +1,5 @@
 from rest_framework.permissions import BasePermission, SAFE_METHODS
+from core.models import Course
 
 
 def has_role(user, *roles):
@@ -40,3 +41,32 @@ class IsAdminOrReadOnly(BasePermission):
         if request.method in SAFE_METHODS:
             return True
         return has_role(request.user, "admin")
+
+
+class IsAuthenticatedStudent(BasePermission):
+    """
+    Allow any authenticated student (or staff/admin).
+    Useful for 'my courses' endpoint.
+    """
+    def has_permission(self, request, view):
+        return has_role(request.user, "student", "admin", "teacher")
+
+
+class IsInstructorOfCourse(BasePermission):
+    """
+    Allow only instructors of a given course (or staff/admin).
+    Requires 'course_id' in URL kwargs.
+    """
+    def has_permission(self, request, view):
+        user = request.user
+        if not (user and user.is_authenticated):
+            return False
+        if user.is_superuser or user.is_staff:
+            return True
+
+        course_id = view.kwargs.get("course_id")
+        if not course_id:
+            return False
+
+        # Adjust if you store instructor relation differently
+        return Course.objects.filter(id=course_id, instructor=user).exists()

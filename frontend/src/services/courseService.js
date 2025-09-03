@@ -1,40 +1,40 @@
-// Handles API calls for Courses
-const API_BASE = "/api/courses/";
+// Handles API calls related to Enrollments, My Courses, and Rosters
+const ENROLLMENTS_API = "/api/enrollments/";
+const MY_COURSES_API = "/api/my-courses/";
+const ROSTER_API = (courseId) => `/api/courses/${courseId}/roster/`;
 
-export async function getCourses() {
-  const res = await fetch(API_BASE);
-  if (!res.ok) throw new Error("Failed to fetch courses");
+/**
+ * List all enrollments (with optional filters).
+ */
+export async function getEnrollments({ studentId = "", courseId = "", status = "" } = {}) {
+  const params = new URLSearchParams();
+  if (studentId) params.append("student", studentId);
+  if (courseId) params.append("course", courseId);
+  if (status) params.append("status", status);
+
+  const res = await fetch(`${ENROLLMENTS_API}?${params.toString()}`);
+  if (!res.ok) throw new Error("Failed to fetch enrollments");
   return res.json();
 }
 
-export async function getCourse(id) {
-  const res = await fetch(`${API_BASE}${id}/`);
-  if (!res.ok) throw new Error("Failed to fetch course");
+/**
+ * Get the current student's courses (My Courses).
+ */
+export async function listMyCourses({ page = 1, pageSize = 10 } = {}) {
+  const params = new URLSearchParams({ page, page_size: pageSize });
+  const res = await fetch(`${MY_COURSES_API}?${params.toString()}`);
+  if (!res.ok) throw new Error("Failed to fetch my courses");
   return res.json();
 }
 
-export async function createCourse(course) {
-  const res = await fetch(API_BASE, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(course),
-  });
-  if (!res.ok) throw new Error("Failed to create course");
-  return res.json();
-}
+/**
+ * Get the roster for a given course (Instructor/Admin).
+ */
+export async function getRoster(courseId, { search = "", page = 1, pageSize = 20 } = {}) {
+  const params = new URLSearchParams({ page, page_size: pageSize });
+  if (search) params.append("search", search);
 
-export async function updateCourse(id, course) {
-  const res = await fetch(`${API_BASE}${id}/`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(course),
-  });
-  if (!res.ok) throw new Error("Failed to update course");
+  const res = await fetch(`${ROSTER_API(courseId)}?${params.toString()}`);
+  if (!res.ok) throw new Error("Failed to fetch course roster");
   return res.json();
-}
-
-export async function deleteCourse(id) {
-  const res = await fetch(`${API_BASE}${id}/`, { method: "DELETE" });
-  if (!res.ok) throw new Error("Failed to delete course");
-  return true;
 }

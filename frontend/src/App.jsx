@@ -38,6 +38,10 @@ import SessionForm from "./pages/SessionForm";
 import AttendanceBoard from "./pages/AttendanceBoard";
 import StudentAttendance from "./pages/StudentAttendance"; // optional per-student view
 
+// ✅ New pages for Part 6
+import MyCourses from "./pages/MyCourses";
+import CourseRoster from "./pages/CourseRoster";
+
 function App() {
   return (
     <Router>
@@ -210,6 +214,24 @@ function App() {
                   element={
                     <ProtectedRoute>
                       <StudentAttendance />
+                    </ProtectedRoute>
+                  }
+                />
+
+                {/* ✅ New routes for Part 6 */}
+                <Route
+                  path="/student/my-courses"
+                  element={
+                    <ProtectedRoute>
+                      <MyCourses />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/instructor/courses/:id/roster"
+                  element={
+                    <ProtectedRoute roles={["admin", "teacher"]}>
+                      <CourseRoster />
                     </ProtectedRoute>
                   }
                 />

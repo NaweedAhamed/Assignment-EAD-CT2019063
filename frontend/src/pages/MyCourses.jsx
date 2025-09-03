@@ -14,7 +14,8 @@ export default function MyCourses() {
     setLoading(true);
     setErr("");
     try {
-      const res = await api.get("/enrollments/me/");
+      // ✅ updated to match backend: GET /api/my-courses/
+      const res = await api.get("/my-courses/");
       const data = Array.isArray(res.data) ? res.data : res.data.results || [];
       setRows(data);
     } catch (e) {
@@ -45,7 +46,9 @@ export default function MyCourses() {
         code: enr.course?.code || "—",
         title: enr.course?.title || "—",
         status: enr.status || "—",
-        enrolled_at: enr.enrolled_at ? new Date(enr.enrolled_at).toLocaleString() : "—",
+        enrolled_at: enr.enrolled_at
+          ? new Date(enr.enrolled_at).toLocaleString()
+          : "—",
         course_id: enr.course?.id,
       })),
     [rows]
