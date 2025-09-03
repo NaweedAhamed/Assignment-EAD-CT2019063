@@ -17,6 +17,11 @@ import EnrollmentsList from "./pages/EnrollmentsList";
 import EnrollmentForm from "./pages/EnrollmentForm";
 import StudentEnrollments from "./pages/StudentEnrollments";
 
+// Assessments & Grades
+import AssessmentsList from "./pages/AssessmentsList";
+import AssessmentForm from "./pages/AssessmentForm";
+import Gradebook from "./pages/Gradebook";
+
 function App() {
   return (
     <Router>
@@ -51,6 +56,14 @@ function App() {
                 path="/students/:studentId/enrollments"
                 element={<StudentEnrollments />}
               />
+
+              {/* Assessments */}
+              <Route path="/assessments" element={<AssessmentsList />} />
+              <Route path="/assessments/new" element={<AssessmentForm />} />
+              <Route path="/assessments/:id/edit" element={<AssessmentForm />} />
+
+              {/* Gradebook */}
+              <Route path="/gradebook" element={<Gradebook />} />
 
               {/* 404 Fallback */}
               <Route path="*" element={<NotFound />} />

@@ -72,6 +72,32 @@ export default function Navbar() {
             >
               + Add Enrollment
             </NavLink>
+
+            {/* Assessments & Gradebook */}
+            <NavLink
+              to="/assessments"
+              className={({ isActive }) =>
+                `${base} ${isActive ? active : "text-white/90"}`
+              }
+            >
+              Assessments
+            </NavLink>
+            <NavLink
+              to="/assessments/new"
+              className={({ isActive }) =>
+                `${base} ${isActive ? active : "text-white/90"}`
+              }
+            >
+              + Add Assessment
+            </NavLink>
+            <NavLink
+              to="/gradebook"
+              className={({ isActive }) =>
+                `${base} ${isActive ? active : "text-white/90"}`
+              }
+            >
+              Gradebook
+            </NavLink>
           </div>
 
           {/* Mobile toggle */}
@@ -158,6 +184,35 @@ export default function Navbar() {
                 }
               >
                 + Add Enrollment
+              </NavLink>
+
+              {/* Assessments & Gradebook */}
+              <NavLink
+                to="/assessments"
+                onClick={() => setOpen(false)}
+                className={({ isActive }) =>
+                  `block ${base} ${isActive ? active : "text-white/90"}`
+                }
+              >
+                Assessments
+              </NavLink>
+              <NavLink
+                to="/assessments/new"
+                onClick={() => setOpen(false)}
+                className={({ isActive }) =>
+                  `block ${base} ${isActive ? active : "text-white/90"}`
+                }
+              >
+                + Add Assessment
+              </NavLink>
+              <NavLink
+                to="/gradebook"
+                onClick={() => setOpen(false)}
+                className={({ isActive }) =>
+                  `block ${base} ${isActive ? active : "text-white/90"}`
+                }
+              >
+                Gradebook
               </NavLink>
             </div>
           </div>
