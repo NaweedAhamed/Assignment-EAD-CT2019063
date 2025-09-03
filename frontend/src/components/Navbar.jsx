@@ -98,6 +98,24 @@ export default function Navbar() {
             >
               Gradebook
             </NavLink>
+
+            {/* Sessions */}
+            <NavLink
+              to="/sessions"
+              className={({ isActive }) =>
+                `${base} ${isActive ? active : "text-white/90"}`
+              }
+            >
+              Sessions
+            </NavLink>
+            <NavLink
+              to="/sessions/new"
+              className={({ isActive }) =>
+                `${base} ${isActive ? active : "text-white/90"}`
+              }
+            >
+              + Add Session
+            </NavLink>
           </div>
 
           {/* Mobile toggle */}
@@ -213,6 +231,26 @@ export default function Navbar() {
                 }
               >
                 Gradebook
+              </NavLink>
+
+              {/* Sessions */}
+              <NavLink
+                to="/sessions"
+                onClick={() => setOpen(false)}
+                className={({ isActive }) =>
+                  `block ${base} ${isActive ? active : "text-white/90"}`
+                }
+              >
+                Sessions
+              </NavLink>
+              <NavLink
+                to="/sessions/new"
+                onClick={() => setOpen(false)}
+                className={({ isActive }) =>
+                  `block ${base} ${isActive ? active : "text-white/90"}`
+                }
+              >
+                + Add Session
               </NavLink>
             </div>
           </div>

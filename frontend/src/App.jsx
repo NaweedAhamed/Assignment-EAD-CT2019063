@@ -22,6 +22,12 @@ import AssessmentsList from "./pages/AssessmentsList";
 import AssessmentForm from "./pages/AssessmentForm";
 import Gradebook from "./pages/Gradebook";
 
+// Sessions & Attendance
+import SessionsList from "./pages/SessionsList";
+import SessionForm from "./pages/SessionForm";
+import AttendanceBoard from "./pages/AttendanceBoard";
+import StudentAttendance from "./pages/StudentAttendance"; // optional per-student view
+
 function App() {
   return (
     <Router>
@@ -64,6 +70,15 @@ function App() {
 
               {/* Gradebook */}
               <Route path="/gradebook" element={<Gradebook />} />
+
+              {/* Sessions */}
+              <Route path="/sessions" element={<SessionsList />} />
+              <Route path="/sessions/new" element={<SessionForm />} />
+              <Route path="/sessions/:id/edit" element={<SessionForm />} />
+
+              {/* Attendance */}
+              <Route path="/sessions/:id/attendance" element={<AttendanceBoard />} />
+              <Route path="/students/:studentId/attendance" element={<StudentAttendance />} />
 
               {/* 404 Fallback */}
               <Route path="*" element={<NotFound />} />
