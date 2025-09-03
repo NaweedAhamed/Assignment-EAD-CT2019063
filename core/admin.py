@@ -1,5 +1,6 @@
 from django.contrib import admin
-from core.models import Course, Student, Enrollment
+from django.contrib.admin import SimpleListFilter
+from core.models import Course, Student, Enrollment, Assessment, Grade
 
 
 @admin.register(Course)
@@ -26,5 +27,57 @@ class EnrollmentAdmin(admin.ModelAdmin):
         "course__code",
         "course__title",
     )
-    list_filter = ("status", "course__code")
+    # ❗ use direct fields in list_filter (no double-underscore)
+    list_filter = ("status", "course")
     ordering = ("-enrolled_at",)
+
+
+@admin.register(Assessment)
+class AssessmentAdmin(admin.ModelAdmin):
+    list_display = ("id", "course", "semester", "title", "type", "weight", "max_marks", "due_date")
+    list_filter = ("type", "semester", "course")
+    search_fields = ("title", "course__title", "course__code")
+
+
+# ----- Optional niceties for Grade admin: course & semester filters -----
+class CourseFilter(SimpleListFilter):
+    title = "course"
+    parameter_name = "course"
+
+    def lookups(self, request, model_admin):
+        return [(c.id, c.title) for c in Course.objects.all().order_by("title")]
+
+    def queryset(self, request, queryset):
+        val = self.value()
+        if val:
+            return queryset.filter(enrollment__course_id=val)
+        return queryset
+
+
+class SemesterFilter(SimpleListFilter):
+    title = "semester"
+    parameter_name = "semester"
+
+    def lookups(self, request, model_admin):
+        return [(str(i), f"Semester {i}") for i in range(1, 9)]
+
+    def queryset(self, request, queryset):
+        val = self.value()
+        if val:
+            return queryset.filter(enrollment__semester=str(val))
+        return queryset
+# -----------------------------------------------------------------------
+
+
+@admin.register(Grade)
+class GradeAdmin(admin.ModelAdmin):
+    list_display = ("id", "enrollment", "assessment", "score", "graded_at", "grader")
+    # ❗ direct FKs only + custom filters (no double-underscore in list_filter)
+    list_filter = ("assessment", "enrollment", CourseFilter, SemesterFilter)
+    search_fields = (
+        "assessment__title",
+        "enrollment__student__full_name",
+        "enrollment__student__index_no",
+        "enrollment__course__title",
+        "enrollment__course__code",
+    )
