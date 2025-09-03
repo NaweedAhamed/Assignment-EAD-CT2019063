@@ -1,4 +1,5 @@
 from decimal import Decimal
+from django.db.models import Sum
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 from core.models import Assessment
@@ -43,7 +44,7 @@ class AssessmentSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         """
-        OPTIONAL: enforce cumulative weight ≤ 100 for (course, semester).
+        Enforce cumulative weight ≤ 100 for (course, semester).
         Comment this block out if you don't want that constraint.
         """
         course = attrs.get("course", getattr(self.instance, "course", None))
@@ -53,7 +54,7 @@ class AssessmentSerializer(serializers.ModelSerializer):
             qs = Assessment.objects.filter(course=course, semester=semester)
             if self.instance:
                 qs = qs.exclude(pk=self.instance.pk)
-            current_total = qs.aggregate(total=serializers.models.Sum("weight"))["total"] or Decimal("0")
+            current_total = qs.aggregate(total=Sum("weight"))["total"] or Decimal("0")
             if current_total + weight > Decimal("100"):
                 raise serializers.ValidationError(
                     {"weight": f"Total weight would exceed 100 (currently {current_total})."}

@@ -9,7 +9,9 @@ class GradeSerializer(serializers.ModelSerializer):
     course_id = serializers.IntegerField(source="enrollment.course_id", read_only=True)
     course_title = serializers.CharField(source="enrollment.course.title", read_only=True)
     assessment_title = serializers.CharField(source="assessment.title", read_only=True)
-    max_marks = serializers.DecimalField(source="assessment.max_marks", read_only=True, max_digits=6, decimal_places=2)
+    max_marks = serializers.DecimalField(
+        source="assessment.max_marks", read_only=True, max_digits=6, decimal_places=2
+    )
 
     class Meta:
         model = Grade
@@ -48,16 +50,27 @@ class GradeSerializer(serializers.ModelSerializer):
         errors = {}
 
         if enrollment and assessment:
+            # Course consistency (strict)
             if enrollment.course_id != assessment.course_id:
                 errors["assessment"] = "Assessment course must match enrollment course."
-            if str(enrollment.semester) != str(assessment.semester):
+
+            # Semester consistency (best-effort)
+            enr_sem = getattr(enrollment, "semester", None)
+            if enr_sem is None:
+                enr_sem = getattr(getattr(enrollment, "course", None), "semester", None)
+            asmt_sem = getattr(assessment, "semester", None)
+            if asmt_sem is None:
+                asmt_sem = getattr(getattr(assessment, "course", None), "semester", None)
+
+            if enr_sem is not None and asmt_sem is not None and str(enr_sem) != str(asmt_sem):
                 errors["assessment"] = "Assessment semester must match enrollment semester."
 
+        # Score validation
         if score is None:
             errors["score"] = "Score is required."
         elif score < 0:
             errors["score"] = "Score cannot be negative."
-        elif assessment and assessment.max_marks is not None and score > assessment.max_marks:
+        elif assessment and getattr(assessment, "max_marks", None) is not None and score > assessment.max_marks:
             errors["score"] = f"Score cannot exceed max marks ({assessment.max_marks})."
 
         if errors:

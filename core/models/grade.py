@@ -21,30 +21,59 @@ class Grade(models.Model):
                 name="uniq_grade_enrollment_assessment",
             )
         ]
+        # Useful indexes for gradebook/result lookups
+        indexes = [
+            models.Index(fields=["enrollment"]),
+            models.Index(fields=["assessment"]),
+        ]
         ordering = ["assessment_id", "id"]
 
     def __str__(self):
         return f"{self.enrollment} · {self.assessment} = {self.score}"
 
     def clean(self):
-        # Keep course/semester consistent across enrollment and assessment
+        """
+        Cross-model validation to ensure data consistency:
+        - Assessment must belong to the same course as the enrollment.
+        - (If available) semesters should match.
+        - Score must be >= 0 and <= assessment.max_marks when provided.
+        """
         enr = self.enrollment
         asmt = self.assessment
-        if enr and asmt:
-            if enr.course_id != asmt.course_id:
-                raise ValidationError(
-                    {"assessment": "Assessment course must match enrollment course."}
-                )
-            if str(enr.semester) != str(asmt.semester):
+
+        if not enr or not asmt:
+            # Let required-field validators handle None cases; nothing else to check here.
+            return
+
+        # 1) Course consistency (strict)
+        if enr.course_id != asmt.course_id:
+            raise ValidationError(
+                {"assessment": "Assessment course must match enrollment course."}
+            )
+
+        # 2) Semester consistency (best-effort: use whatever is available)
+        #    Prefer explicit fields; fall back to course.semester if needed.
+        enr_sem = getattr(enr, "semester", None)
+        if enr_sem is None:
+            enr_sem = getattr(getattr(enr, "course", None), "semester", None)
+        asmt_sem = getattr(asmt, "semester", None)
+        if asmt_sem is None:
+            asmt_sem = getattr(getattr(asmt, "course", None), "semester", None)
+
+        if enr_sem is not None and asmt_sem is not None:
+            if str(enr_sem) != str(asmt_sem):
                 raise ValidationError(
                     {"assessment": "Assessment semester must match enrollment semester."}
                 )
 
-            if self.score is None:
-                raise ValidationError({"score": "Score is required."})
-            if self.score < 0:
-                raise ValidationError({"score": "Score cannot be negative."})
-            if asmt.max_marks is not None and self.score > asmt.max_marks:
-                raise ValidationError(
-                    {"score": f"Score cannot exceed max marks ({asmt.max_marks})."}
-                )
+        # 3) Score validation
+        if self.score is None:
+            raise ValidationError({"score": "Score is required."})
+        if self.score < 0:
+            raise ValidationError({"score": "Score cannot be negative."})
+
+        max_marks = getattr(asmt, "max_marks", None)
+        if max_marks is not None and self.score > max_marks:
+            raise ValidationError(
+                {"score": f"Score cannot exceed max marks ({max_marks})."}
+            )

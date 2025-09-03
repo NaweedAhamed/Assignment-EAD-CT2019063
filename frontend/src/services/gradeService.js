@@ -92,3 +92,82 @@ export async function updateGrade(id, payload) {
 export async function deleteGrade(id) {
   await axios.delete(`${GRADES}${id}/`);
 }
+// src/services/gradeService.js
+import api from "./axios";
+
+/**
+ * Normalize API responses that may be paginated ({results, count})
+ * or plain arrays.
+ */
+function normalize(res) {
+  const data = Array.isArray(res.data) ? res.data : res.data?.results ?? res.data ?? [];
+  const count =
+    typeof res.data?.count === "number"
+      ? res.data.count
+      : Array.isArray(res.data)
+      ? res.data.length
+      : (Array.isArray(data) ? data.length : 0);
+  return { data, count, raw: res.data };
+}
+
+/**
+ * Instructor/Admin: full gradebook for a course.
+ * GET /courses/:courseId/gradebook/
+ */
+export async function getCourseGradebook(courseId) {
+  const res = await api.get(`/courses/${courseId}/gradebook/`);
+  // gradebook is an object (not a list), so return raw payload
+  return res.data;
+}
+
+/**
+ * Student: results across all my courses.
+ * GET /my-results/
+ */
+export async function getMyResults() {
+  const res = await api.get(`/my-results/`);
+  // returns { items: [...] }
+  return res.data;
+}
+
+/**
+ * Student: results for a single course.
+ * GET /courses/:courseId/my-results/
+ */
+export async function getMyCourseResults(courseId) {
+  const res = await api.get(`/courses/${courseId}/my-results/`);
+  return res.data;
+}
+
+/**
+ * Grades CRUD (optional but handy for inline edits in gradebook)
+ * POST /grades/  | PUT /grades/:id/
+ */
+export async function createGrade(payload) {
+  // payload: { enrollment, assessment, score, grader? }
+  const res = await api.post(`/grades/`, payload);
+  return res.data;
+}
+
+export async function updateGrade(id, payload) {
+  const res = await api.put(`/grades/${id}/`, payload);
+  return res.data;
+}
+
+/**
+ * Fetch assessments for a course (useful for building gradebook columns)
+ * GET /assessments/?course=<id>
+ */
+export async function listAssessmentsByCourse(courseId, params = {}) {
+  const res = await api.get(`/assessments/`, { params: { course: courseId, ...params } });
+  return normalize(res);
+}
+
+/**
+ * List grades with filters (useful for debugging/data loads)
+ * GET /grades/?enrollment=<id>&assessment=<id>
+ */
+export async function listGrades(params = {}) {
+  const res = await api.get(`/grades/`, { params });
+  return normalize(res);
+}
