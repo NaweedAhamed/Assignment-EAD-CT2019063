@@ -13,7 +13,8 @@ from core.views import (
 from core.views.teacher import TeacherViewSet
 from core.views.profile import StudentsMeView
 from core.views.enrollment_views import MyCoursesView, CourseRosterView
-from core.views.gradebook_views import CourseGradebookView, MyResultsView, MyCourseResultView  # ✅ new imports
+from core.views.gradebook_views import CourseGradebookView, MyResultsView, MyCourseResultView
+from core.views.dashboard_views import StudentDashboardView, AdminDashboardView  # ✅ new imports
 
 router = DefaultRouter()
 router.register(r"students", StudentViewSet, basename="student")
@@ -37,4 +38,8 @@ urlpatterns = [
     path("courses/<int:course_id>/gradebook/", CourseGradebookView.as_view(), name="course-gradebook"),
     path("my-results/", MyResultsView.as_view(), name="my-results"),
     path("courses/<int:course_id>/my-results/", MyCourseResultView.as_view(), name="my-course-result"),
+
+    # ✅ Part 8 endpoints (Dashboards)
+    path("dashboard/student/", StudentDashboardView.as_view(), name="dashboard-student"),
+    path("dashboard/admin/", AdminDashboardView.as_view(), name="dashboard-admin"),
 ]

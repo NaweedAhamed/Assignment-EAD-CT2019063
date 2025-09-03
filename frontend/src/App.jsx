@@ -38,9 +38,17 @@ import SessionForm from "./pages/SessionForm";
 import AttendanceBoard from "./pages/AttendanceBoard";
 import StudentAttendance from "./pages/StudentAttendance"; // optional per-student view
 
-// ✅ New pages for Part 6
+// Part 6
 import MyCourses from "./pages/MyCourses";
 import CourseRoster from "./pages/CourseRoster";
+
+// Part 7 (results pages)
+import Results from "./pages/Results";
+import CourseResult from "./pages/CourseResult";
+
+// Part 8 (dashboards) — flat pages/
+import StudentDashboard from "./pages/StudentDashboard";
+import AdminDashboard from "./pages/AdminDashboard";
 
 function App() {
   return (
@@ -218,7 +226,7 @@ function App() {
                   }
                 />
 
-                {/* ✅ New routes for Part 6 */}
+                {/* Part 6 */}
                 <Route
                   path="/student/my-courses"
                   element={
@@ -232,6 +240,42 @@ function App() {
                   element={
                     <ProtectedRoute roles={["admin", "teacher"]}>
                       <CourseRoster />
+                    </ProtectedRoute>
+                  }
+                />
+
+                {/* Part 7 (Results) */}
+                <Route
+                  path="/student/results"
+                  element={
+                    <ProtectedRoute>
+                      <Results />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/student/courses/:courseId/results"
+                  element={
+                    <ProtectedRoute>
+                      <CourseResult />
+                    </ProtectedRoute>
+                  }
+                />
+
+                {/* Part 8 (Dashboards) */}
+                <Route
+                  path="/student/dashboard"
+                  element={
+                    <ProtectedRoute>
+                      <StudentDashboard />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/dashboard"
+                  element={
+                    <ProtectedRoute roles={["admin"]}>
+                      <AdminDashboard />
                     </ProtectedRoute>
                   }
                 />
