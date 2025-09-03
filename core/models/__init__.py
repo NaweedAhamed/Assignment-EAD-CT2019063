@@ -3,3 +3,5 @@ from .course import Course
 from .enrollment import Enrollment  
 from .assessment import Assessment  
 from .grade import Grade            
+from .session import CourseSession     
+from .attendance import Attendance     

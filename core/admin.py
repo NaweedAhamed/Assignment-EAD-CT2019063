@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.admin import SimpleListFilter
-from core.models import Course, Student, Enrollment, Assessment, Grade
+from core.models import Course, Student, Enrollment, Assessment, Grade, CourseSession, Attendance
 
 
 @admin.register(Course)
@@ -81,3 +81,25 @@ class GradeAdmin(admin.ModelAdmin):
         "enrollment__course__title",
         "enrollment__course__code",
     )
+
+
+@admin.register(CourseSession)
+class CourseSessionAdmin(admin.ModelAdmin):
+    list_display = ("id", "course", "semester", "date", "start_time", "end_time", "room")
+    list_filter = ("course", "semester", "date")
+    search_fields = ("room", "notes", "course__title", "course__code")
+    ordering = ("-date", "-start_time")
+
+
+@admin.register(Attendance)
+class AttendanceAdmin(admin.ModelAdmin):
+    list_display = ("id", "session", "enrollment", "status", "marked_at", "marker")
+    # Use direct FKs in list_filter to avoid admin.E116
+    list_filter = ("status", "session", "enrollment")
+    search_fields = (
+        "enrollment__student__full_name",
+        "enrollment__student__index_no",
+        "enrollment__course__title",
+        "enrollment__course__code",
+    )
+    ordering = ("-marked_at",)
