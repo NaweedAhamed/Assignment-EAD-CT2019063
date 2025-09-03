@@ -1,46 +1,37 @@
-// API calls for Students
-const API_BASE = "/api/students/";
+// frontend/src/services/studentService.js
+import api from "./axios";
 
-export async function getStudents() {
-  const res = await fetch(API_BASE);
-  if (!res.ok) throw new Error("Failed to fetch students");
-  return res.json();
+export async function getStudents(params = {}) {
+  const res = await api.get("/students/", { params });
+  return res.data;
 }
 
 export async function getStudent(id) {
-  const res = await fetch(`${API_BASE}${id}/`);
-  if (!res.ok) throw new Error("Failed to fetch student");
-  return res.json();
+  const res = await api.get(`/students/${id}/`);
+  return res.data;
 }
 
-export async function createStudent(student) {
-  const res = await fetch(API_BASE, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(student),
-  });
-  if (!res.ok) {
-    const msg = await res.text();
-    throw new Error(msg || "Failed to create student");
-  }
-  return res.json();
+export async function createStudent(payload) {
+  const res = await api.post("/students/", payload);
+  return res.data;
 }
 
-export async function updateStudent(id, student) {
-  const res = await fetch(`${API_BASE}${id}/`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(student),
-  });
-  if (!res.ok) {
-    const msg = await res.text();
-    throw new Error(msg || "Failed to update student");
-  }
-  return res.json();
+export async function updateStudent(id, payload) {
+  const res = await api.put(`/students/${id}/`, payload);
+  return res.data;
 }
 
 export async function deleteStudent(id) {
-  const res = await fetch(`${API_BASE}${id}/`, { method: "DELETE" });
-  if (!res.ok) throw new Error("Failed to delete student");
-  return true;
+  const res = await api.delete(`/students/${id}/`);
+  return res.data;
+}
+
+export async function getMyStudentProfile() {
+  const res = await api.get("/students/me/");
+  return res.data;
+}
+
+export async function updateMyStudentProfile(payload) {
+  const res = await api.put("/students/me/", payload);
+  return res.data;
 }

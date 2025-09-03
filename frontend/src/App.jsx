@@ -17,6 +17,10 @@ import CourseForm from "./pages/CourseForm";
 import StudentsList from "./pages/StudentsList";
 import StudentDetail from "./pages/StudentDetail";
 import StudentForm from "./pages/StudentForm";
+import StudentProfile from "./pages/StudentProfile";
+
+// Teachers
+import TeachersList from "./pages/TeachersList";
 
 // Enrollments
 import EnrollmentsList from "./pages/EnrollmentsList";
@@ -52,13 +56,33 @@ function App() {
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
 
+                {/* Profile (student self) */}
+                <Route
+                  path="/me"
+                  element={
+                    <ProtectedRoute>
+                      <StudentProfile />
+                    </ProtectedRoute>
+                  }
+                />
+
+                {/* Teachers (admin) */}
+                <Route
+                  path="/teachers"
+                  element={
+                    <ProtectedRoute roles={["admin"]}>
+                      <TeachersList />
+                    </ProtectedRoute>
+                  }
+                />
+
                 {/* Courses */}
                 <Route path="/courses" element={<CoursesList />} />
                 <Route path="/courses/:id" element={<CourseDetail />} />
                 <Route
                   path="/admin/courses/new"
                   element={
-                    <ProtectedRoute roles={['admin']}>
+                    <ProtectedRoute roles={["admin"]}>
                       <CourseForm />
                     </ProtectedRoute>
                   }
@@ -66,7 +90,7 @@ function App() {
                 <Route
                   path="/admin/courses/:id/edit"
                   element={
-                    <ProtectedRoute roles={['admin']}>
+                    <ProtectedRoute roles={["admin"]}>
                       <CourseForm />
                     </ProtectedRoute>
                   }
@@ -78,7 +102,7 @@ function App() {
                 <Route
                   path="/admin/students/new"
                   element={
-                    <ProtectedRoute roles={['admin']}>
+                    <ProtectedRoute roles={["admin"]}>
                       <StudentForm />
                     </ProtectedRoute>
                   }
@@ -86,7 +110,7 @@ function App() {
                 <Route
                   path="/admin/students/:id/edit"
                   element={
-                    <ProtectedRoute roles={['admin']}>
+                    <ProtectedRoute roles={["admin"]}>
                       <StudentForm />
                     </ProtectedRoute>
                   }
@@ -97,7 +121,7 @@ function App() {
                 <Route
                   path="/enrollments/new"
                   element={
-                    <ProtectedRoute roles={['admin', 'teacher']}>
+                    <ProtectedRoute roles={["admin", "teacher"]}>
                       <EnrollmentForm />
                     </ProtectedRoute>
                   }
@@ -105,7 +129,7 @@ function App() {
                 <Route
                   path="/enrollments/:id/edit"
                   element={
-                    <ProtectedRoute roles={['admin', 'teacher']}>
+                    <ProtectedRoute roles={["admin", "teacher"]}>
                       <EnrollmentForm />
                     </ProtectedRoute>
                   }
@@ -122,7 +146,7 @@ function App() {
                 <Route
                   path="/assessments/new"
                   element={
-                    <ProtectedRoute roles={['admin', 'teacher']}>
+                    <ProtectedRoute roles={["admin", "teacher"]}>
                       <AssessmentForm />
                     </ProtectedRoute>
                   }
@@ -130,7 +154,7 @@ function App() {
                 <Route
                   path="/assessments/:id/edit"
                   element={
-                    <ProtectedRoute roles={['admin', 'teacher']}>
+                    <ProtectedRoute roles={["admin", "teacher"]}>
                       <AssessmentForm />
                     </ProtectedRoute>
                   }
@@ -140,7 +164,7 @@ function App() {
                 <Route
                   path="/gradebook"
                   element={
-                    <ProtectedRoute roles={['admin', 'teacher']}>
+                    <ProtectedRoute roles={["admin", "teacher"]}>
                       <Gradebook />
                     </ProtectedRoute>
                   }
@@ -150,7 +174,7 @@ function App() {
                 <Route
                   path="/sessions"
                   element={
-                    <ProtectedRoute roles={['admin', 'teacher']}>
+                    <ProtectedRoute roles={["admin", "teacher"]}>
                       <SessionsList />
                     </ProtectedRoute>
                   }
@@ -158,7 +182,7 @@ function App() {
                 <Route
                   path="/sessions/new"
                   element={
-                    <ProtectedRoute roles={['admin', 'teacher']}>
+                    <ProtectedRoute roles={["admin", "teacher"]}>
                       <SessionForm />
                     </ProtectedRoute>
                   }
@@ -166,7 +190,7 @@ function App() {
                 <Route
                   path="/sessions/:id/edit"
                   element={
-                    <ProtectedRoute roles={['admin', 'teacher']}>
+                    <ProtectedRoute roles={["admin", "teacher"]}>
                       <SessionForm />
                     </ProtectedRoute>
                   }
@@ -176,7 +200,7 @@ function App() {
                 <Route
                   path="/sessions/:id/attendance"
                   element={
-                    <ProtectedRoute roles={['admin', 'teacher']}>
+                    <ProtectedRoute roles={["admin", "teacher"]}>
                       <AttendanceBoard />
                     </ProtectedRoute>
                   }

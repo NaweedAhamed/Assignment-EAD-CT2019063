@@ -148,6 +148,18 @@ export default function Navbar() {
               </>
             )}
 
+            {/* Profile (when logged in) */}
+            {isAuthed && (
+              <NavLink
+                to="/me"
+                className={({ isActive }) =>
+                  `${base} ${isActive ? active : "text-white/90"}`
+                }
+              >
+                Profile
+              </NavLink>
+            )}
+
             {/* Auth actions */}
             {!isAuthed ? (
               <>
@@ -337,6 +349,19 @@ export default function Navbar() {
                 </>
               )}
 
+              {/* Profile (when logged in) */}
+              {isAuthed && (
+                <NavLink
+                  to="/me"
+                  onClick={() => setOpen(false)}
+                  className={({ isActive }) =>
+                    `block ${base} ${isActive ? active : "text-white/90"}`
+                  }
+                >
+                  Profile
+                </NavLink>
+              )}
+
               {/* Auth */}
               {!isAuthed ? (
                 <>
@@ -362,7 +387,7 @@ export default function Navbar() {
               ) : (
                 <button
                   onClick={handleLogout}
-                  className={`block ${base} bg-white/20 text-left`}
+                  className={`block ${base} bg白/20 text-left`.replace("白", "white")} // keep tailwind class correct
                 >
                   Logout
                 </button>
