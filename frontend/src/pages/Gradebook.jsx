@@ -2,8 +2,39 @@
 import { useEffect, useMemo, useState } from "react";
 import Loader from "../components/Loader";
 import EmptyState from "../components/EmptyState";
-import { listCourses, listEnrollments } from "../services/enrollmentService";
-import { listAssessments, listGrades, createGrade, updateGrade } from "../services/gradeService";
+
+// ✅ use courseService for courses
+import { getCourses } from "../services/courseService";
+
+// ✅ enrollment list (handles both shapes)
+import { getEnrollments } from "../services/enrollmentService";
+
+// ✅ use the names from gradeService we created
+import {
+  listAssessmentsByCourse,
+  listGrades,
+  createGrade,
+  updateGrade,
+} from "../services/gradeService";
+
+// ✅ export CSV
+import { downloadCourseGradesCSV } from "../services/exportService";
+
+function normalizeList(res) {
+  // Accepts either plain array, {results, count}, or {data, count}
+  const results = Array.isArray(res)
+    ? res
+    : res?.results ?? res?.data ?? [];
+  const count =
+    typeof res?.count === "number"
+      ? res.count
+      : Array.isArray(res)
+      ? res.length
+      : Array.isArray(results)
+      ? results.length
+      : 0;
+  return { results, count };
+}
 
 export default function Gradebook() {
   // filters
@@ -26,7 +57,15 @@ export default function Gradebook() {
 
   // load courses once
   useEffect(() => {
-    listCourses().then(setCourses).catch((e) => console.error(e));
+    (async () => {
+      try {
+        const res = await getCourses();
+        const list = Array.isArray(res) ? res : res?.results ?? res?.data ?? [];
+        setCourses(list);
+      } catch (e) {
+        console.error(e);
+      }
+    })();
   }, []);
 
   const canLoad = courseId && semester;
@@ -37,38 +76,59 @@ export default function Gradebook() {
     setError("");
     setChanged({});
     try {
-      // 1) Assessments (course + semester) – pull all pages if needed
+      // 1) Assessments (by course) – pull all pages if needed
       let allAssessments = [];
       let page = 1;
       const pageSize = 200;
+
       while (true) {
-        const { results, count } = await listAssessments({ page, pageSize, courseId, semester, ordering: "id" });
+        const res = await listAssessmentsByCourse(courseId, {
+          page,
+          page_size: pageSize,
+          ordering: "id",
+          // If your API supports semester for assessments, include it:
+          // semester,
+        });
+        const { results, count } = normalizeList(res);
         allAssessments = allAssessments.concat(results);
         if (results.length < pageSize || allAssessments.length >= count) break;
         page += 1;
       }
       setAssessments(allAssessments);
 
-      // 2) Enrollments (course + semester) – pull all (we need every student)
+      // 2) Enrollments – pull all (we need every student)
       let allEnrollments = [];
       page = 1;
       while (true) {
-        const { results, count } = await listEnrollments({ page, pageSize, courseId, studentId: "", search: "" });
-        // listEnrollments doesn't support semester filter explicitly; if your backend does, pass it:
-        // const { results, count } = await listEnrollments({ page, pageSize, courseId, semester });
+        const res = await getEnrollments({
+          page,
+          page_size: pageSize,
+          course: courseId,
+          // If your backend supports semester filter on enrollments, add it:
+          // semester,
+        });
+        const { results, count } = normalizeList(res);
         allEnrollments = allEnrollments.concat(results);
         if (results.length < pageSize || allEnrollments.length >= count) break;
         page += 1;
       }
       // Optional: filter enrollments by semester client-side if needed
-      const filteredEnrollments = allEnrollments.filter((e) => String(e.semester) === String(semester));
+      const filteredEnrollments = allEnrollments.filter(
+        (e) => String(e.semester) === String(semester)
+      );
       setEnrollments(filteredEnrollments);
 
-      // 3) Grades (filtered by course + semester) – pull all
+      // 3) Grades – pull all (filtering by course/semester if your API supports it)
       let allGrades = [];
       page = 1;
       while (true) {
-        const { results, count } = await listGrades({ page, pageSize, courseId, semester });
+        const res = await listGrades({
+          page,
+          page_size: pageSize,
+          course: courseId,
+          semester,
+        });
+        const { results, count } = normalizeList(res);
         allGrades = allGrades.concat(results);
         if (results.length < pageSize || allGrades.length >= count) break;
         page += 1;
@@ -113,9 +173,10 @@ export default function Gradebook() {
     let total = 0;
     for (const a of assessments) {
       const key = `${enrollmentId}:${a.id}`;
-      const score = changed[key] !== undefined
-        ? Number(changed[key] || 0)
-        : (gradeMap.get(key)?.score ?? 0);
+      const score =
+        changed[key] !== undefined
+          ? Number(changed[key] || 0)
+          : gradeMap.get(key)?.score ?? 0;
       const max = maxMap.get(a.id) || 0;
       const weight = weightMap.get(a.id) || 0;
       if (max > 0) {
@@ -175,6 +236,15 @@ export default function Gradebook() {
           >
             Refresh
           </button>
+          {/* ✅ Export Grades CSV */}
+          <button
+            className="rounded border px-3 py-2 disabled:opacity-50"
+            onClick={() => downloadCourseGradesCSV(courseId)}
+            disabled={!courseId}
+            title={!courseId ? "Select a course first" : "Download grades CSV"}
+          >
+            Export CSV
+          </button>
           <button
             className="rounded px-4 py-2 bg-black text-white shadow hover:opacity-90 disabled:opacity-60"
             onClick={saveAll}
@@ -215,15 +285,32 @@ export default function Gradebook() {
       </div>
 
       {!canLoad ? (
-        <EmptyState title="Pick course & semester" subtitle="Select both to load the gradebook." />
+        <EmptyState
+          title="Pick course & semester"
+          subtitle="Select both to load the gradebook."
+        />
       ) : loading ? (
         <Loader />
       ) : error ? (
-        <EmptyState title="Couldn’t load gradebook" subtitle={error} action={<button onClick={loadGradebook} className="border px-4 py-2 rounded">Retry</button>} />
+        <EmptyState
+          title="Couldn’t load gradebook"
+          subtitle={error}
+          action={
+            <button onClick={loadGradebook} className="border px-4 py-2 rounded">
+              Retry
+            </button>
+          }
+        />
       ) : enrollments.length === 0 ? (
-        <EmptyState title="No enrollments" subtitle="No students enrolled for this course & semester." />
+        <EmptyState
+          title="No enrollments"
+          subtitle="No students enrolled for this course & semester."
+        />
       ) : assessments.length === 0 ? (
-        <EmptyState title="No assessments" subtitle="Create at least one assessment for this course & semester." />
+        <EmptyState
+          title="No assessments"
+          subtitle="Create at least one assessment for this course & semester."
+        />
       ) : (
         <div className="overflow-x-auto rounded-2xl border">
           <table className="min-w-full text-sm">
@@ -243,7 +330,10 @@ export default function Gradebook() {
             </thead>
             <tbody>
               {enrollments.map((enr) => {
-                const studentName = enr.student_name || enr.student?.full_name || `#${enr.student}`;
+                const studentName =
+                  enr.student_name ||
+                  enr.student?.full_name ||
+                  `#${enr.student}`;
                 return (
                   <tr key={enr.id} className="border-t">
                     <td className="px-4 py-2">{studentName}</td>
@@ -254,7 +344,7 @@ export default function Gradebook() {
                       const value =
                         changed[key] !== undefined
                           ? changed[key]
-                          : (existing?.score ?? "");
+                          : existing?.score ?? "";
                       return (
                         <td key={key} className="px-4 py-2">
                           <input
@@ -262,7 +352,9 @@ export default function Gradebook() {
                             step="0.01"
                             className="w-24 rounded border px-2 py-1"
                             value={value}
-                            onChange={(e) => onChangeScore(enr.id, a.id, e.target.value)}
+                            onChange={(e) =>
+                              onChangeScore(enr.id, a.id, e.target.value)
+                            }
                             placeholder="0"
                           />
                         </td>

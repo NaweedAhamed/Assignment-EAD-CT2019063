@@ -14,7 +14,8 @@ from core.views.teacher import TeacherViewSet
 from core.views.profile import StudentsMeView
 from core.views.enrollment_views import MyCoursesView, CourseRosterView
 from core.views.gradebook_views import CourseGradebookView, MyResultsView, MyCourseResultView
-from core.views.dashboard_views import StudentDashboardView, AdminDashboardView  # ✅ new imports
+from core.views.dashboard_views import StudentDashboardView, AdminDashboardView
+from core.views.export_views import CourseGradesCSVView, CourseAttendanceCSVView  # ✅ new imports
 
 router = DefaultRouter()
 router.register(r"students", StudentViewSet, basename="student")
@@ -42,4 +43,8 @@ urlpatterns = [
     # ✅ Part 8 endpoints (Dashboards)
     path("dashboard/student/", StudentDashboardView.as_view(), name="dashboard-student"),
     path("dashboard/admin/", AdminDashboardView.as_view(), name="dashboard-admin"),
+
+    # ✅ Part 9 endpoints (CSV Exports)
+    path("courses/<int:course_id>/grades.csv", CourseGradesCSVView.as_view(), name="course-grades-csv"),
+    path("courses/<int:course_id>/attendance.csv", CourseAttendanceCSVView.as_view(), name="course-attendance-csv"),
 ]

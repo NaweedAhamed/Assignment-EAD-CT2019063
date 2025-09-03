@@ -3,8 +3,14 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import Loader from "../components/Loader";
 import EmptyState from "../components/EmptyState";
-import { getSession, listAttendance, createAttendance, updateAttendance } from "../services/attendanceService";
-import { listEnrollments } from "../services/enrollmentService";
+import {
+  getSession,
+  listAttendance,
+  createAttendance,
+  updateAttendance,
+} from "../services/attendanceService";
+import { getEnrollments as fetchEnrollments } from "../services/enrollmentService";
+import { downloadCourseAttendanceCSV } from "../services/exportService";
 
 const STATUS_OPTS = [
   { value: "present", label: "Present" },
@@ -12,6 +18,20 @@ const STATUS_OPTS = [
   { value: "late", label: "Late" },
   { value: "excused", label: "Excused" },
 ];
+
+function normalizeList(res) {
+  // Accept array, {results, count}, or {data, count}
+  const results = Array.isArray(res) ? res : res?.results ?? res?.data ?? [];
+  const count =
+    typeof res?.count === "number"
+      ? res.count
+      : Array.isArray(res)
+      ? res.length
+      : Array.isArray(results)
+      ? results.length
+      : 0;
+  return { results, count };
+}
 
 export default function AttendanceBoard() {
   const { id } = useParams(); // session id
@@ -43,23 +63,28 @@ export default function AttendanceBoard() {
       setSession(s);
 
       // Load enrollments for this course; filter semester client-side
-      const { results: enrResults } = await listEnrollments({
+      const enrRes = await fetchEnrollments({
         page: 1,
-        pageSize: 500,
-        courseId: s.course,
+        page_size: 500,
+        pageSize: 500, // support either param style
+        course: s.course, // common backend filter
+        courseId: s.course, // if service expects camelCase
       });
+      const { results: enrResults } = normalizeList(enrRes);
       const enrFiltered = (enrResults || []).filter(
         (e) => String(e.semester) === String(s.semester)
       );
       setEnrollments(enrFiltered);
 
       // Load attendance for this session
-      const { results: attResults } = await listAttendance({
+      const attRes = await listAttendance({
         page: 1,
+        page_size: 1000,
         pageSize: 1000,
         session: id,
         ordering: "enrollment",
       });
+      const { results: attResults } = normalizeList(attRes);
       setAttendance(attResults || []);
     } catch (e) {
       console.error(e);
@@ -91,7 +116,13 @@ export default function AttendanceBoard() {
         if (existing?.id) {
           ops.push(updateAttendance(existing.id, { status }));
         } else {
-          ops.push(createAttendance({ enrollment: Number(enrollmentId), session: Number(id), status }));
+          ops.push(
+            createAttendance({
+              enrollment: Number(enrollmentId),
+              session: Number(id),
+              status,
+            })
+          );
         }
       }
       await Promise.all(ops);
@@ -111,19 +142,32 @@ export default function AttendanceBoard() {
       <EmptyState
         title="Couldn’t load attendance"
         subtitle={error}
-        action={<button onClick={loadAll} className="border px-4 py-2 rounded">Retry</button>}
+        action={
+          <button onClick={loadAll} className="border px-4 py-2 rounded">
+            Retry
+          </button>
+        }
       />
     );
   }
   if (!session) {
-    return <EmptyState title="Session not found" subtitle="Please go back and pick a valid session." />;
+    return (
+      <EmptyState
+        title="Session not found"
+        subtitle="Please go back and pick a valid session."
+      />
+    );
   }
   if (enrollments.length === 0) {
     return (
       <EmptyState
         title="No enrolled students"
         subtitle="There are no enrollments for this course & semester."
-        action={<Link to="/sessions" className="border px-4 py-2 rounded">Back to Sessions</Link>}
+        action={
+          <Link to="/sessions" className="border px-4 py-2 rounded">
+            Back to Sessions
+          </Link>
+        }
       />
     );
   }
@@ -134,12 +178,23 @@ export default function AttendanceBoard() {
         <div>
           <h1 className="text-2xl font-bold">Attendance</h1>
           <p className="text-sm text-gray-600">
-            {session.course_title || "Course"} — Semester {session.semester} — {session.date} {session.start_time}-{session.end_time}
+            {session.course_title || "Course"} — Semester {session.semester} —{" "}
+            {session.date} {session.start_time}-{session.end_time}
             {session.room ? ` — ${session.room}` : ""}
           </p>
         </div>
         <div className="flex gap-2">
-          <Link to="/sessions" className="rounded border px-3 py-2">Back</Link>
+          <Link to="/sessions" className="rounded border px-3 py-2">
+            Back
+          </Link>
+          {/* ✅ Export Attendance CSV */}
+          <button
+            className="rounded border px-3 py-2"
+            onClick={() => downloadCourseAttendanceCSV(session.course)}
+            title="Download attendance CSV"
+          >
+            Export CSV
+          </button>
           <button
             className="rounded px-4 py-2 bg-black text-white shadow hover:opacity-90 disabled:opacity-60"
             onClick={saveAll}
@@ -160,8 +215,10 @@ export default function AttendanceBoard() {
           </thead>
           <tbody>
             {enrollments.map((enr) => {
-              const studentName = enr.student_name || enr.student?.full_name || `#${enr.student}`;
-              const current = changed[enr.id] ?? attByEnrollment.get(enr.id)?.status ?? "";
+              const studentName =
+                enr.student_name || enr.student?.full_name || `#${enr.student}`;
+              const current =
+                changed[enr.id] ?? attByEnrollment.get(enr.id)?.status ?? "";
               return (
                 <tr key={enr.id} className="border-t">
                   <td className="px-4 py-2">{studentName}</td>
@@ -173,7 +230,9 @@ export default function AttendanceBoard() {
                     >
                       <option value="">— Select —</option>
                       {STATUS_OPTS.map((o) => (
-                        <option key={o.value} value={o.value}>{o.label}</option>
+                        <option key={o.value} value={o.value}>
+                          {o.label}
+                        </option>
                       ))}
                     </select>
                   </td>
