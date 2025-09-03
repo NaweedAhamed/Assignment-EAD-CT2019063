@@ -1,10 +1,9 @@
 // frontend/src/services/enrollmentService.js
-import axios from "./axios"; 
+import api from "./axios";
 
-
-const ENROLLMENTS = "/core/enrollments/";
-const STUDENTS = "/core/students/";
-const COURSES = "/core/courses/";
+const ENROLLMENTS = "/enrollments/";
+const STUDENTS = "/students/";
+const COURSES = "/courses/";
 
 /**
  * List enrollments with optional filters and pagination
@@ -15,23 +14,26 @@ export async function listEnrollments({
   search = "",
   studentId = "",
   courseId = "",
+  status = "",
+  ordering = "",
 } = {}) {
-  const params = {
-    page,
-    page_size: pageSize,
-  };
+  const params = { page, page_size: pageSize };
   if (search) params.search = search;
   if (studentId) params.student = studentId;
   if (courseId) params.course = courseId;
+  if (status) params.status = status; // "enrolled" | "dropped"
+  if (ordering) params.ordering = ordering;
 
-  const res = await axios.get(ENROLLMENTS, { params });
-  // Supports both paginated ({results, count}) and non-paginated ([])
+  const res = await api.get(ENROLLMENTS, { params });
+  const data = res.data;
   return {
-    results: res.data?.results ?? res.data ?? [],
+    results: data?.results ?? data ?? [],
     count:
-      typeof res.data?.count === "number"
-        ? res.data.count
-        : (res.data?.length ?? 0),
+      typeof data?.count === "number"
+        ? data.count
+        : Array.isArray(data)
+        ? data.length
+        : 0,
   };
 }
 
@@ -39,58 +41,98 @@ export async function listEnrollments({
  * Retrieve a single enrollment
  */
 export async function getEnrollment(id) {
-  const res = await axios.get(`${ENROLLMENTS}${id}/`);
+  const res = await api.get(`${ENROLLMENTS}${id}/`);
   return res.data;
 }
 
 /**
  * Create enrollment
+ * - Students: pass { course: <id> } (student inferred server-side)
+ * - Admin/Teacher: may pass { student: <id>, course: <id> }
  */
 export async function createEnrollment(payload) {
-  // payload = { student, course, semester, status, enrollment_date }
-  const res = await axios.post(ENROLLMENTS, payload);
+  const res = await api.post(ENROLLMENTS, payload);
   return res.data;
 }
 
 /**
- * Update enrollment
+ * Update enrollment (admin/teacher only, typically for status)
  */
 export async function updateEnrollment(id, payload) {
-  const res = await axios.put(`${ENROLLMENTS}${id}/`, payload);
+  const res = await api.put(`${ENROLLMENTS}${id}/`, payload);
   return res.data;
 }
 
 /**
- * Delete enrollment
+ * Delete enrollment (drop)
  */
 export async function deleteEnrollment(id) {
-  await axios.delete(`${ENROLLMENTS}${id}/`);
+  await api.delete(`${ENROLLMENTS}${id}/`);
 }
 
 /**
- * List students (for dropdowns)
+ * Students list (for dropdowns)
  */
 export async function listStudents(query = "") {
-  const res = await axios.get(STUDENTS, {
-    params: { search: query, page_size: 200 },
-  });
+  const res = await api.get(STUDENTS, { params: { search: query, page_size: 200 } });
   return res.data?.results ?? res.data ?? [];
 }
 
 /**
- * List courses (for dropdowns)
+ * Courses list (for dropdowns)
  */
 export async function listCourses(query = "") {
-  const res = await axios.get(COURSES, {
-    params: { search: query, page_size: 200 },
-  });
+  const res = await api.get(COURSES, { params: { search: query, page_size: 200 } });
   return res.data?.results ?? res.data ?? [];
 }
 
 /**
  * Enrollments for a single student
  */
-export async function listStudentEnrollments(studentId, { page = 1, pageSize = 10 } = {}) {
+export async function listStudentEnrollments(
+  studentId,
+  { page = 1, pageSize = 10, status = "" } = {}
+) {
   if (!studentId) return { results: [], count: 0 };
-  return listEnrollments({ page, pageSize, studentId });
+  return listEnrollments({ page, pageSize, studentId, status });
+}
+
+/**
+ * Current user's enrollments (My Courses)
+ */
+export async function listMyEnrollments({ page = 1, pageSize = 100, status = "" } = {}) {
+  const params = { page, page_size: pageSize };
+  if (status) params.status = status;
+  const res = await api.get("/enrollments/me/", { params });
+  const data = res.data;
+  return data?.results ?? data ?? [];
+}
+
+/**
+ * Course roster (admin/teacher)
+ */
+export async function listCourseRoster(
+  courseId,
+  { status = "enrolled", page = 1, pageSize = 200 } = {}
+) {
+  if (!courseId) return [];
+  const params = { status, page, page_size: pageSize };
+  const res = await api.get(`/courses/${courseId}/enrollments/`, { params });
+  return res.data?.results ?? res.data ?? [];
+}
+
+/**
+ * Self-enroll (student)
+ */
+export async function selfEnroll(courseId) {
+  if (!courseId) throw new Error("courseId is required");
+  const res = await api.post(ENROLLMENTS, { course: courseId });
+  return res.data;
+}
+
+/**
+ * Drop enrollment (student or manager)
+ */
+export async function dropEnrollment(enrollmentId) {
+  await api.delete(`${ENROLLMENTS}${enrollmentId}/`);
 }

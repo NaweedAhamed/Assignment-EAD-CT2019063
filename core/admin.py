@@ -1,7 +1,21 @@
 from django.contrib import admin
 from django.contrib.admin import SimpleListFilter
-from core.models import Course, Student, Enrollment, Assessment, Grade, CourseSession, Attendance
+from core.models import (
+    Course,
+    Student,
+    Enrollment,
+    Assessment,
+    Grade,
+    CourseSession,
+    Attendance,
+    UserProfile,
+)
 
+@admin.register(UserProfile)
+class UserProfileAdmin(admin.ModelAdmin):
+    list_display = ("user", "role")
+    list_filter = ("role",)
+    search_fields = ("user__username", "user__email", "user__first_name", "user__last_name")
 
 @admin.register(Course)
 class CourseAdmin(admin.ModelAdmin):
@@ -10,16 +24,15 @@ class CourseAdmin(admin.ModelAdmin):
     list_filter = ("credits",)
     ordering = ("code",)
 
-
 @admin.register(Student)
 class StudentAdmin(admin.ModelAdmin):
     list_display = ("index_no", "full_name", "email", "program", "created_at")
     search_fields = ("index_no", "full_name", "email", "program")
     ordering = ("index_no",)
 
-
 @admin.register(Enrollment)
 class EnrollmentAdmin(admin.ModelAdmin):
+    # removed 'semester' because Enrollment has no such field
     list_display = ("student", "course", "status", "enrolled_at")
     search_fields = (
         "student__index_no",
@@ -27,10 +40,8 @@ class EnrollmentAdmin(admin.ModelAdmin):
         "course__code",
         "course__title",
     )
-    # ❗ use direct fields in list_filter (no double-underscore)
     list_filter = ("status", "course")
     ordering = ("-enrolled_at",)
-
 
 @admin.register(Assessment)
 class AssessmentAdmin(admin.ModelAdmin):
@@ -38,8 +49,6 @@ class AssessmentAdmin(admin.ModelAdmin):
     list_filter = ("type", "semester", "course")
     search_fields = ("title", "course__title", "course__code")
 
-
-# ----- Optional niceties for Grade admin: course & semester filters -----
 class CourseFilter(SimpleListFilter):
     title = "course"
     parameter_name = "course"
@@ -53,27 +62,11 @@ class CourseFilter(SimpleListFilter):
             return queryset.filter(enrollment__course_id=val)
         return queryset
 
-
-class SemesterFilter(SimpleListFilter):
-    title = "semester"
-    parameter_name = "semester"
-
-    def lookups(self, request, model_admin):
-        return [(str(i), f"Semester {i}") for i in range(1, 9)]
-
-    def queryset(self, request, queryset):
-        val = self.value()
-        if val:
-            return queryset.filter(enrollment__semester=str(val))
-        return queryset
-# -----------------------------------------------------------------------
-
-
 @admin.register(Grade)
 class GradeAdmin(admin.ModelAdmin):
     list_display = ("id", "enrollment", "assessment", "score", "graded_at", "grader")
-    # ❗ direct FKs only + custom filters (no double-underscore in list_filter)
-    list_filter = ("assessment", "enrollment", CourseFilter, SemesterFilter)
+    # removed SemesterFilter (Enrollment has no semester)
+    list_filter = ("assessment", "enrollment", CourseFilter)
     search_fields = (
         "assessment__title",
         "enrollment__student__full_name",
@@ -81,7 +74,7 @@ class GradeAdmin(admin.ModelAdmin):
         "enrollment__course__title",
         "enrollment__course__code",
     )
-
+    ordering = ("-graded_at",)
 
 @admin.register(CourseSession)
 class CourseSessionAdmin(admin.ModelAdmin):
@@ -90,11 +83,9 @@ class CourseSessionAdmin(admin.ModelAdmin):
     search_fields = ("room", "notes", "course__title", "course__code")
     ordering = ("-date", "-start_time")
 
-
 @admin.register(Attendance)
 class AttendanceAdmin(admin.ModelAdmin):
     list_display = ("id", "session", "enrollment", "status", "marked_at", "marker")
-    # Use direct FKs in list_filter to avoid admin.E116
     list_filter = ("status", "session", "enrollment")
     search_fields = (
         "enrollment__student__full_name",
